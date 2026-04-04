@@ -1,0 +1,24 @@
+{
+  "name": "javascript-performance-tuning",
+  "version": "1.0.0",
+  "description": "JavaScriptアプリケーションのパフォーマンス関連についての調査用リポジトリ",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kitakou0313/javascript-performance-tuning.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kitakou0313/javascript-performance-tuning/issues"
+  },
+  "homepage": "https://github.com/kitakou0313/javascript-performance-tuning#readme"
+}
