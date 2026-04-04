@@ -1,4 +1,4 @@
-class CoorinateSetWithString {
+export class CoorinateSetWithString {
     coodinates: Set<string> = new Set()
 
     convertCoordinateToString(h:number, w:number):string{

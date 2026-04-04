@@ -1,4 +1,4 @@
-class CoorinateSetWithMapAndSet {
+export class CoorinateSetWithMapAndSet {
     coodinates: Map<number, Set<number>> = new Map()
 
     add(h:number, w:number) {
