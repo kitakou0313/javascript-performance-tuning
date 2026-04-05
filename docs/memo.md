@@ -2,12 +2,12 @@
 
 JavaScriptコードを実行前にMachine Codeに変換する必要がある。
 
-## V8 Engineの場合
+## [V8 Engine](https://github.com/v8/v8/tree/main)の場合
 - JavaScript -> AST -> ByteCode -> Machine Code という流れで変換され実行される
     - JavaScript -> AST
         - parserが担当
     - AST -> ByteCode
-        - IgnitionがByteCodeを実行する
+        - IgnitionというInterpreterがByteCodeを実行する
     - ByteCode -> Machine Code
         - TurboFanというJITコンパイラが担当
         - Byte Codeのうち実行される頻度が高いものが適宜Machine Codeに変換される
@@ -15,9 +15,10 @@ JavaScriptコードを実行前にMachine Codeに変換する必要がある。
 - ByteCode?
     - Machine Codeよりもシンプルな構文
     - V8内で定義されている
+        - https://github.com/v8/v8/blob/main/src/interpreter/bytecodes.h
 - 疑問
     - なぜ直接Machine Codeにせず間にByte Codeを挟む？
-        - 前提:JavaScript -> Machine Codeに要する時間よりJavaScirpt -> Machine Codeが早い
+        - 前提:JavaScript -> Machine Codeに要する時間よりJavaScirpt -> ByteCodeの方が早い
         - ブラウザの場合
             - コードがユーザーのブラウザに送られてから毎回machine codeに変換していると時間がかかりすぎる
         - サーバーサイドの場合
@@ -51,3 +52,34 @@ perf report
 ```
 
 ## 今回の検証
+- 課題:JavaScriptでの行数での比較と実際の実行時間の比較が一致してない
+    - 少ない行数のコードが実際には2倍以上の長さのコードよりも遅いことがあった
+    - 直感的ではなく、実装者の経験に依存する
+- アイデア:JavaScript -> ByteCode or Machine Codeに変換して実行される行数を見ればどちらが遅いかは自明にわかる？
+- テスト用のコードを作成
+    - 二次元座標に対して以下の操作を行うClassを定義
+        - 集合へ追加
+        - 集合から削除
+        - ある座標が集合に含まれるかの判定
+        - 集合の元を配列にして返す
+    - このClassをMap+Setで実装したもの、StringとSetで実装したものを用意し、実行時間を比較する
+        - 以前検証した結果前者の方が早い
+    - これらに対しての操作を複数回行うスクリプトを作成し、ByteCodeを見てみる
+- 生成したByteCode
+    - [MapとSetで実装したバージョン](docs/byteCode-withMapAndSet.txt)
+    - [StringとSetで実装したバージョン](docs/byteCode-withString.txt)
+- 結論
+    - 実際にどの程度の実行時間になるかはテスト用のコードを使って検証した方がいい
+        - ByteCodeなら実際に実行されるMachine Codeとほぼ同じように行数が見れるかと思ったが、他命令へのジャンプがあり難しかった
+            - inline展開してほしい
+        - Machine Codeへの変換はv8 Engineの仕様上困難
+            - 基本的にByteCodeを逐次Machine Codeへ変換して実行している
+                - 実行までの速度を高速化するため
+            - 高頻度に呼び出される関数のみMachine Codeに変換する
+    - CPU以外の要因で遅くなることも考えられる
+        - ロック待ちなど
+    - ただ、実際のMachine Codeを見れる手段はあった方がいい
+        - なぜ時間がかかるのか -> Machine Codeに変換したときに長いから
+        - 原理的に筋の悪い実装をしなくて済むようになる
+- ToDo
+    - perfでJavaScriptのパフォーマンスを見る
