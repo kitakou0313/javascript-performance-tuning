@@ -73,8 +73,7 @@ perf report
         - ByteCodeなら実際に実行されるMachine Codeとほぼ同じように行数が見れるかと思ったが、あまり意味がなさそう
             - 他命令へのジャンプがあり難しかった
                 - inline展開しないと行数がわからない
-            - 1 ByteCode辺りの変換後のMachine codeの行数には大きなばらつきがあるので、最終的な比較にはならない
-                - 5 ~ 130
+            - （未検証）1 ByteCode辺りの変換後のMachine codeの行数には大きなばらつきがあるので、最終的な比較にはならない
                 - ByteCodeでは行数が少なくてもMachine Code変換後に行数が増加している可能性が考えられる
                 - (そもそも1Machine code辺りの実行時間は全ての命令で等しいの？)
         - Machine Codeへの変換はv8 Engineの仕様上困難
