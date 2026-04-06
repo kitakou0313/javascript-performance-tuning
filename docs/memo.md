@@ -70,8 +70,13 @@ perf report
     - [StringとSetで実装したバージョン](docs/byteCode-withString.txt)
 - 結論
     - 実際にどの程度の実行時間になるかはテスト用のコードを使って検証した方がいい
-        - ByteCodeなら実際に実行されるMachine Codeとほぼ同じように行数が見れるかと思ったが、他命令へのジャンプがあり難しかった
-            - inline展開してほしい
+        - ByteCodeなら実際に実行されるMachine Codeとほぼ同じように行数が見れるかと思ったが、あまり意味がなさそう
+            - 他命令へのジャンプがあり難しかった
+                - inline展開しないと行数がわからない
+            - 1 ByteCode辺りの変換後のMachine codeの行数には大きなばらつきがあるので、最終的な比較にはならない
+                - 5 ~ 130
+                - ByteCodeでは行数が少なくてもMachine Code変換後に行数が増加している可能性が考えられる
+                - (そもそも1Machine code辺りの実行時間は全ての命令で等しいの？)
         - Machine Codeへの変換はv8 Engineの仕様上困難
             - 基本的にByteCodeを逐次Machine Codeへ変換して実行している
                 - 実行までの速度を高速化するため
@@ -79,7 +84,8 @@ perf report
     - CPU以外の要因で遅くなることも考えられる
         - ロック待ちなど
     - ただ、実際のMachine Codeを見れる手段はあった方がいい
-        - なぜ時間がかかるのか -> Machine Codeに変換したときに長いから
+        - なぜ時間がかかるのか -> Machine Codeに変換したときに長いから という結論が得られる
         - 原理的に筋の悪い実装をしなくて済むようになる
-- ToDo
-    - perfでJavaScriptのパフォーマンスを見る
+
+## ByteCodeとMachine Codeと対応
+- ByteCodeとMachine Codeが
