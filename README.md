@@ -9,3 +9,4 @@ sudo apt-get install -y linux-perf
 
 ## ToDo
 - perfの使い方を復習
+- ByteCode -> Machine code変換の詳細なプロセスを調査

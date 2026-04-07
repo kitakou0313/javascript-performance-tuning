@@ -66,8 +66,8 @@ perf report
         - 以前検証した結果前者の方が早い
     - これらに対しての操作を複数回行うスクリプトを作成し、ByteCodeを見てみる
 - 生成したByteCode
-    - [MapとSetで実装したバージョン](docs/byteCode-withMapAndSet.txt)
-    - [StringとSetで実装したバージョン](docs/byteCode-withString.txt)
+    - [MapとSetで実装したバージョン](./byteCode-withMapAndSet.txt)
+    - [StringとSetで実装したバージョン](./byteCode-withString.txt)
 - 結論
     - 実際にどの程度の実行時間になるかはテスト用のコードを使って検証した方がいい
         - ByteCodeなら実際に実行されるMachine Codeとほぼ同じように行数が見れるかと思ったが、あまり意味がなさそう
@@ -80,8 +80,8 @@ perf report
             - 基本的にByteCodeを逐次Machine Codeへ変換して実行している
                 - 実行までの速度を高速化するため
             - 高頻度に呼び出される関数のみMachine Codeに変換する
-    - CPU以外の要因で遅くなることも考えられる
-        - ロック待ちなど
+        - CPU以外の要因で遅くなることも考えられる
+            - ロック待ちなど
     - ただ、実際のMachine Codeを見れる手段はあった方がいい
         - なぜ時間がかかるのか -> Machine Codeに変換したときに長いから という結論が得られる
         - 原理的に筋の悪い実装をしなくて済むようになる
