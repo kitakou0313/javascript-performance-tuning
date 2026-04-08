@@ -2,11 +2,19 @@
 
 ## Perfとは
 - LinuxのProfiler tool
+- ハードウェア、ソフトウェア（Linux Kernelなど）から横断的に情報を収集し、パフォーマンスを測定する
 
 ## インストール
 ```
 sudo apt-get install -y linux-perf
 ```
+
+## コマンドの構成
+主に以下のサブコマンドで構成される
+- list
+- stat
+- record
+- report
 
 ## サブコマンドの使い方
 
@@ -89,6 +97,34 @@ listAllCoordinates: 1.020s
 node ➜ /workspaces/javascript-performance-tuning (main) $ 
 ```
 
+カウントされるイベントの例
+- ハードウェア関連
+  - CPUのPMU（Performant Measure Unit）から
+    - 例
+      - cycles
+        - サイクル数
+      - instructions
+        - 命令数
+      - cache-misses
+        - キャッシュミス
+    - キャッシュメモリから
+      - L1-dcache-load-misses
+        - L1 levelのキャッシュでのミス
+      - LLC-load-misses
+        - 最終レベルでのキャッシュでのミス
+- ソフトウェア関連
+  - Linux Kernelから
+    - 例
+      - context-switches
+        - コンテキストswitch
+      - page-faults
+        - ページフォルト
+    - ftraceから
+      - 例
+        - sched:sched_switch
+          - スケジューリング
+        - syscalls:sys_enter_socket
+          - ソケット実行
 ## 資料
 - https://perfwiki.github.io/main/
 
