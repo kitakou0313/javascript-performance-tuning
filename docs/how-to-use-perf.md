@@ -2,12 +2,42 @@
 
 ## Perfとは
 - LinuxのProfiler tool
-- ハードウェア、ソフトウェア（Linux Kernelなど）から横断的に情報を収集し、パフォーマンスを測定する
+- ハードウェア（CPUなど）、ソフトウェア（Linux Kernelなど）から横断的に情報を収集し、パフォーマンスを測定する
 
 ## インストール
 ```
 sudo apt-get install -y linux-perf
 ```
+
+## イベントについて
+カウントされるイベントの例
+- ハードウェア関連
+  - CPUのPMU（Performant Measure Unit）から
+    - 例
+      - cycles
+        - サイクル数
+      - instructions
+        - 命令数
+      - cache-misses
+        - キャッシュミス
+    - キャッシュメモリから
+      - L1-dcache-load-misses
+        - L1 levelのキャッシュでのミス
+      - LLC-load-misses
+        - 最終レベルでのキャッシュでのミス
+- ソフトウェア関連
+  - Linux Kernelから
+    - 例
+      - context-switches
+        - コンテキストswitch
+      - page-faults
+        - ページフォルト
+    - ftraceから
+      - 例
+        - sched:sched_switch
+          - スケジューリング
+        - syscalls:sys_enter_socket
+          - ソケット実行
 
 ## コマンドの構成
 主に以下のサブコマンドで構成される
@@ -97,34 +127,46 @@ listAllCoordinates: 1.020s
 node ➜ /workspaces/javascript-performance-tuning (main) $ 
 ```
 
-カウントされるイベントの例
-- ハードウェア関連
-  - CPUのPMU（Performant Measure Unit）から
-    - 例
-      - cycles
-        - サイクル数
-      - instructions
-        - 命令数
-      - cache-misses
-        - キャッシュミス
-    - キャッシュメモリから
-      - L1-dcache-load-misses
-        - L1 levelのキャッシュでのミス
-      - LLC-load-misses
-        - 最終レベルでのキャッシュでのミス
-- ソフトウェア関連
-  - Linux Kernelから
-    - 例
-      - context-switches
-        - コンテキストswitch
-      - page-faults
-        - ページフォルト
-    - ftraceから
-      - 例
-        - sched:sched_switch
-          - スケジューリング
-        - syscalls:sys_enter_socket
-          - ソケット実行
+Modifierで収集するイベントの数を制限できる
+```
+```
+
+`-r`で複数回の測定が可能 カウンターの値の平均値と標準偏差が得られる
+```
+$ perf stat -r 5 sleep 1
+
+ Performance counter stats for 'sleep 1' (5 runs):
+
+              0.83 msec task-clock:u                     #    0.001 CPUs utilized               ( +-  9.22% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+                56      page-faults:u                    #   67.672 K/sec                       ( +-  0.44% )
+   <not supported>      cycles:u                                                              
+   <not supported>      instructions:u                                                        
+   <not supported>      branches:u                                                            
+   <not supported>      branch-misses:u                                                       
+
+          1.007249 +- 0.000117 seconds time elapsed  ( +-  0.01% )
+```
+
+cpuを対象、スレッドを対象、プロセスを対象にカウンタを収集できる（ソフトウェアを実行する側とされる側の視点両方で集計が可能）
+```
+
+# -CでCPUを制限
+perf stat -B -e cycles:u,instructions:u -a -C 0,2-3 sleep 5
+```
+
+実行中のプロセスにアタッチしてのカウンタ測定も可能
+```
+ps ax | fgrep sshd
+
+ 2262 ?        Ss     0:00 /usr/sbin/sshd -D
+ 2787 pts/0    S+     0:00 fgrep --color=auto sshd
+
+# -pで指定 コマンドを渡さないとアタッチしたプロセスが停止するまで続く
+perf stat -e cycles -p 2262 sleep 2
+```
+
 ## 資料
 - https://perfwiki.github.io/main/
 
