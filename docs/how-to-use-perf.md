@@ -175,7 +175,7 @@ perf stat -e cycles -p 2262 sleep 2
 ```
 # 収集（どの命令を実行しているかのみ）
 perf record node build/sampleWithString.js
-# スタックトレースを収集
+# スタックトレースを収集（flame graphを生成したい場合はこのオプションを利用）
 perf record -g node build/sampleWithString.js
 ```
 
@@ -195,6 +195,8 @@ perf script report flamegraph
 
 ## 資料
 - https://perfwiki.github.io/main/
+- https://www.brendangregg.com/perf.html
+- https://www.brendangregg.com/blog/2014-09-17/node-flame-graphs-on-linux.html
 
 ## 感想
 - コンテナ環境では使いづらい
