@@ -3,6 +3,7 @@
 ## Perfとは
 - LinuxのProfiler tool
 - ハードウェア（CPUなど）、ソフトウェア（Linux Kernelなど）から横断的に情報を収集し、パフォーマンスを測定する
+  - Linux Kernelのperf_events interfaceを活用している
 
 ## インストール
 ```
@@ -166,6 +167,31 @@ ps ax | fgrep sshd
 # -pで指定 コマンドを渡さないとアタッチしたプロセスが停止するまで続く
 perf stat -e cycles -p 2262 sleep 2
 ```
+
+### perf record
+プロファイルを取得するコマンド。スレッド視点、プロセス視点、CPU視点で取得できる。
+`perf.data`というファイルに書き出されるため、これを他ツールで解析する（`perf report`, `perf annotate`など）
+
+```
+# 収集（どの命令を実行しているかのみ）
+perf record node build/sampleWithString.js
+# スタックトレースを収集
+perf record -g node build/sampleWithString.js
+```
+
+収集するタイミングはeventで確認している（Event-based sampling）
+
+### perf report
+`perf record`で記録したサンプルを分析する
+
+```
+# flame graphを生成
+perf script report flamegraph
+```
+
+### perf annotate
+サンプルの結果を実行される命令レベルで分析できる
+アプリケーションが`-ggdb`でコンパイルされている場合はソースコードレベルで分析できる
 
 ## 資料
 - https://perfwiki.github.io/main/
