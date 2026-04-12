@@ -9,8 +9,9 @@
 ```
 sudo apt-get install -y linux-perf
 ```
+## 背景
 
-## イベントについて
+### イベントについて
 カウントされるイベントの例
 - ハードウェア関連
   - CPUのPMU（Performant Measure Unit）から
@@ -39,6 +40,15 @@ sudo apt-get install -y linux-perf
           - スケジューリング
         - syscalls:sys_enter_socket
           - ソケット実行
+
+### シンボルについて
+- メモリ上のアドレスと関数名や変数名の対応
+  - これがない場合perfの結果を16進数で取り扱うことになる
+- パッケージによるインストールの場合はデバッグパッケージがついてくることもある
+  - dbgsym
+- elf形式の場合、strippedでなければ良い
+- VMにより実行される言語の場合（Node.js, Javaなど）、それぞれの言語の機能で関数との対応関係をシンボルとして渡せる
+  - JIT Symbol
 
 ## コマンドの構成
 主に以下のサブコマンドで構成される
@@ -128,7 +138,7 @@ listAllCoordinates: 1.020s
 node ➜ /workspaces/javascript-performance-tuning (main) $ 
 ```
 
-Modifierで収集するイベントの数を制限できる
+Modifierで収集するイベントの数を制限できる 一度にカウントできるハードウェアイベントの数には限りがあり（CPU依存）それを超える数の記録は概算になるため（多重化）
 ```
 ```
 
@@ -164,8 +174,8 @@ ps ax | fgrep sshd
  2262 ?        Ss     0:00 /usr/sbin/sshd -D
  2787 pts/0    S+     0:00 fgrep --color=auto sshd
 
-# -pで指定 コマンドを渡さないとアタッチしたプロセスが停止するまで続く
-perf stat -e cycles -p 2262 sleep 2
+# -pで指定 Ctrl+Cで停止
+perf stat -e cycles -p 2262
 ```
 
 ### perf record
@@ -197,6 +207,7 @@ perf script report flamegraph
 - https://perfwiki.github.io/main/
 - https://www.brendangregg.com/perf.html
 - https://www.brendangregg.com/blog/2014-09-17/node-flame-graphs-on-linux.html
+  - perfコマンドがperf_eventと呼ばれており、ややこしい
 
 ## 感想
 - コンテナ環境では使いづらい
