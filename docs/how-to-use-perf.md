@@ -45,6 +45,12 @@ sudo apt-get install -y linux-perf
           - スケジューリング
         - syscalls:sys_enter_socket
           - ソケット実行
+    - USDT（ユーザー定義のtrace point）
+    - Dynamic Tracing
+      - ユーザーが動的に追加できるtrace point
+      - kprobe（Kernel）、uprobe（ユーザーランドのアプリケーション）
+    - Profile
+      - 周期的にCPUで実行されている命令およびスタックトレースを記録したもの
 
 ### シンボルについて
 - メモリ上のアドレスと関数名や変数名の対応
