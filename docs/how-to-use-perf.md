@@ -52,6 +52,43 @@ sudo apt-get install -y linux-perf
     - Profile
       - 周期的にCPUで実行されている命令およびスタックトレースを記録したもの
 
+`perf list`コマンドで確認可能 コンテナ環境だとやはり見れない
+```
+$ perf list --details
+Error: failed to open tracing events directory
+/sys/kernel/tracing/events: No such file or directory
+
+List of pre-defined events (to be used in -e or -M):
+
+  alignment-faults                                   [Software event]
+  bpf-output                                         [Software event]
+  cgroup-switches                                    [Software event]
+  context-switches OR cs                             [Software event]
+  cpu-clock                                          [Software event]
+  cpu-migrations OR migrations                       [Software event]
+  dummy                                              [Software event]
+  emulation-faults                                   [Software event]
+  major-faults                                       [Software event]
+  minor-faults                                       [Software event]
+Error: failed to open tracing events directory
+/sys/kernel/tracing/events: No such file or directory
+
+List of pre-defined events (to be used in -e or -M):
+
+  alignment-faults                                   [Software event]
+  bpf-output                                         [Software event]
+  cgroup-switches                                    [Software event]
+  context-switches OR cs                             [Software event]
+  cpu-clock                                          [Software event]
+  cpu-migrations OR migrations                       [Software event]
+  dummy                                              [Software event]
+  emulation-faults                                   [Software event]
+  major-faults                                       [Software event]
+  minor-faults                                       [Software event]
+  page-faults OR faults                              [Software event]
+  task-clock                                         [Software event]
+```
+
 ### シンボルについて
 - メモリ上のアドレスと関数名や変数名の対応
   - これがない場合perfの結果を16進数で取り扱うことになる
