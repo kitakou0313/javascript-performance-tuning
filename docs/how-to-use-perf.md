@@ -89,6 +89,56 @@ List of pre-defined events (to be used in -e or -M):
   task-clock                                         [Software event]
 ```
 
+#### Software Event
+- [tracepoints](https://www.brendangregg.com/perf.html#Tracepoints)もサポートしている 
+  - Kernelにハードコードされたイベント
+  - scheduler, block I/Oなどが見れる
+- 以下で見れる
+```
+$ man perf_event_open
+```
+- イベントによってはデフォルトでサンプリングを行う場合がある（-vvオプションやperf_event_open(2) のmanで確認可能）
+```
+$ perf record -vv -e context-switches /bin/true
+DEBUGINFOD_URLS=
+nr_cblocks: 0
+affinity: SYS
+mmap flush: 1
+comp level: 0
+Problems creating module maps, continuing anyway...
+------------------------------------------------------------
+perf_event_attr:
+  type                             1 (software)
+  size                             136
+  config                           0x3 (PERF_COUNT_SW_CONTEXT_SWITCHES)
+  { sample_period, sample_freq }   4000 <-ここ
+  sample_type                      IP|TID|TIME|PERIOD
+  read_format                      ID|LOST
+```
+- 全て収集したい場合は-c 1を指定
+```
+$ perf record -c 1  -vv -e context-switches node build/sampleWithString.js
+DEBUGINFOD_URLS=
+nr_cblocks: 0
+affinity: SYS
+mmap flush: 1
+comp level: 0
+Problems creating module maps, continuing anyway...
+------------------------------------------------------------
+perf_event_attr:
+  type                             1 (software)
+  size                             136
+  config                           0x3 (PERF_COUNT_SW_CONTEXT_SWITCHES)
+  { sample_period, sample_freq }   1 <- ここが1になっている
+  sample_type                      IP|TID|TIME
+  read_format                      ID|LOST
+  disabled                         1
+  inherit                          1
+  mmap                             1
+```
+
+#### Hardware Event(PMCs)
+
 ### シンボルについて
 - メモリ上のアドレスと関数名や変数名の対応
   - これがない場合perfの結果を16進数で取り扱うことになる
