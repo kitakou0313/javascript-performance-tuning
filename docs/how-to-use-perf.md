@@ -138,6 +138,36 @@ perf_event_attr:
 ```
 
 #### Hardware Event(PMCs)
+- CPUに関する低レイヤーの情報を得られる
+  - 例
+    - CPU Cycles
+    - instructions retired
+    - memory stall cycles
+    - Cache miss
+- 一度に数個のイベントのみ記録する
+  - カウンターは物理的なリソースでありその上限があるmため
+
+#### Kernel Tracepoints
+- Kernelにハードコードされた論理的なポイント
+  - 例
+    - TCPイベント
+    - system call
+    - file system I/O
+    - cpuスケジューラーイベント
+
+#### User-Level Statically Defined Tracing (USDT)
+- アプリケーションにハードコードされた論理的なポイント
+  - Kernel Tracepointsのユーザーアプリケーション版
+- 多くのアプリケーションでは[DTrace](https://www.brendangregg.com/dtrace.html)のサポート目的でトレースポイントが追加されている
+  - ない場合は自力でコンパイルする
+  - elf形式を直接読むことで確認できる
+    - `readelf -n node`
+
+#### Dynamic Tracing
+- Kernel、ユーザーアプリケーション内に埋め込まれたトレースポイント
+- Tracepointと違って不安定なAPIだが、多くのイベントを取得できる
+- 利点
+  - プロセスの再起動なしで有効化できる
 
 ### シンボルについて
 - メモリ上のアドレスと関数名や変数名の対応
