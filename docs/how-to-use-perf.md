@@ -195,6 +195,89 @@ perf_event_attr:
 
 ### 利用例
 
+#### CPUの統計
+PMCからイベントの統計を取得する
+```
+$ perf stat node build/sampleWithString.js
+add: 4.290s
+has: 1.065s
+listAllCoordinates: 1.020s
+
+ Performance counter stats for 'node build/sampleWithString.js':
+
+          6,403.64 msec task-clock:u                     #    1.001 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             7,878      page-faults:u                    #    1.230 K/sec                     
+   <not supported>      cycles:u                                                              
+   <not supported>      instructions:u                                                        
+   <not supported>      branches:u                                                            
+   <not supported>      branch-misses:u                                                       
+
+       6.395073711 seconds time elapsed
+
+       6.392953000 seconds user
+       0.011994000 seconds sys
+
+```
+- IPC(instructions per cycle)などのメトリクスが見れる
+- IPC
+  - CPUの1サイクルあたりに実行される命令数
+    - 1越えが良い
+    - 実際に何の命令を実行しているのかは要確認
+      - Spin loopに陥っている可能性もある
+        - whileの無限ループなどで実態としてタスクが進んでいない状態
+  - 大きい値ほど実行される命令のスループットが高いことを示す
+- front cycles, backend cyclesなどはCPUのマイクロアーキテクチャに関わる話
+
+-dオプションで詳細も見れる
+```
+$ perf stat -d node build/sampleWithString.js
+add: 4.258s
+has: 1.078s
+listAllCoordinates: 998.525ms
+
+ Performance counter stats for 'node build/sampleWithString.js':
+
+          6,369.84 msec task-clock:u                     #    1.001 CPUs utilized             
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             7,908      page-faults:u                    #    1.241 K/sec                     
+   <not supported>      cycles:u                                                              
+   <not supported>      instructions:u                                                        
+   <not supported>      branches:u                                                            
+   <not supported>      branch-misses:u                                                       
+   <not supported>      L1-dcache-loads:u                                                     
+   <not supported>      L1-dcache-load-misses:u                                               
+   <not supported>      LLC-loads:u                                                           
+   <not supported>      LLC-load-misses:u                                                     
+
+       6.360812128 seconds time elapsed
+
+       6.359873000 seconds user
+       0.011999000 seconds sys
+```
+
+-eオプションでカウント対象のイベントを絞れる
+```
+$ perf stat -e context-switches:u node build/sampleWithString.js
+add: 4.280s
+has: 1.085s
+listAllCoordinates: 1.118s
+
+ Performance counter stats for 'node build/sampleWithString.js':
+
+                 0      context-switches:u                                                    
+
+       6.503723962 seconds time elapsed
+
+       6.499896000 seconds user
+       0.015002000 seconds sys
+
+```
+
+--repeat, --sync, --pre, --postなどは自動テストに便利
+
 ## コマンドの構成
 主に以下のサブコマンドで構成される
 - list
