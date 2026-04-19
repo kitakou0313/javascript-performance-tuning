@@ -145,7 +145,7 @@ perf_event_attr:
     - memory stall cycles
     - Cache miss
 - 一度に数個のイベントのみ記録する
-  - カウンターは物理的なリソースでありその上限があるmため
+  - カウンターは物理的なリソースでありその上限があるため
 
 #### Kernel Tracepoints
 - Kernelにハードコードされた論理的なポイント
@@ -323,7 +323,7 @@ $ perf report --stdio
                           node::InternalCallbackScope::~InternalCallbackScope()
                           node::InternalCallbackScope::Close()
 ```
-頂点がCPUで実行されている関数であり、それを呼び出している祖先に遡っている。-Gオプションで判定させることも可能
+頂点がCPUで実行されている関数であり、それを呼び出している祖先に遡っている。-Gオプションで反転させることも可能
 
 例えば下の結果の場合は実行時間の99%をextract_bufが占めている
 ```
@@ -334,6 +334,82 @@ $ perf report --stdio
                     |--90.99%-- extract_buf
 ```
 https://www.brendangregg.com/perf.html より
+
+### Event Profiling
+- 時間ではなくCPU Hardwareカウンターでサンプリングする方法
+- 以下でカウントに使えるイベント一覧を表示
+```
+$ perf list | grep Hardware
+Error: failed to open tracing events directory
+/sys/kernel/tracing/events: No such file or directory
+  mem:<addr>[/len][:access]                          [Hardware breakpoint]
+``` 
+- -cオプションで指定した回数イベントが発生した時にProfilingを行う
+
+```
+$ perf record -e L1-dcache-load-misses -c 10000 -g -- node build/sampleWithString.js
+Error:
+The L1-dcache-load-misses:u event is not supported.
+```
+- イベントを用いたプロファイリングの場合はSkewと呼ばれる歪みが発生することがある
+
+### Static kernel tracing
+- tracepointを使ったサンプリングの例
+
+システムコール実行のサンプリングの例
+```
+$ perf  stat -e 'syscalls:sys_enter_*' node build/sampleWithStri
+ng.js
+event syntax error: 'syscalls:sys_enter_*'
+                     \___ unknown tracepoint
+
+Error:  Unable to find debugfs/tracefs
+Hint:   Was your kernel compiled with debugfs/tracefs support?
+Hint:   Is the debugfs/tracefs filesystem mounted?
+Hint:   Try 'sudo mount -t debugfs nodev /sys/kernel/debug'
+Run 'perf list' for a list of valid events
+
+ Usage: perf stat [<options>] [<command>]
+
+    -e, --event <event>   event selector. use 'perf list' to list available events
+```
+straceでも同様のことができるが、perfよりも負荷が高い（62倍）
+
+新しいプロセスの作成 'sched:sched:sched_process_exec'イベントで追跡できる（exec syscallが異なるバイナリを実行した場合のイベント）ただforkで起動した例はこのイベントは起きず、またexecをアドレス空間のリセットに使う例もあるので必ずしも新しいプロセス実行とイコールではない
+```
+$ sudo perf record -e 'sched:sched:sched_process_exec' -a
+```
+
+他にもネットワーク接続をトレースできたりする
+```
+$ perf record -e syscalls:sys_enter_connect -a
+$ perf report --stdio
+
+# Stack traceを記録する（-g）ことでなぜ実行されたのかを調査できる
+$ perf record -e syscalls:sys_enter_connect -ag
+$ perf report --stdio
+```
+
+### Static User tracing
+ユーザー空間で実行されるアプリケーションにUSDT probeが追加されている場合、そのイベントをカウントできる。
+
+```
+# イベントを追加
+# バイナリ内にprobeが定義されていないとダメそう（ただインストールしたものだとイベントが追加されなかった）
+$ perf buildid-cache --add `which node`
+
+# perf list | grep sdt_node
+  sdt_node:gc__done                                  [SDT event]
+  sdt_node:gc__start                                 [SDT event]
+  sdt_node:http__client__request                     [SDT event]
+  sdt_node:http__client__response                    [SDT event]
+  sdt_node:http__server__request                     [SDT event]
+  sdt_node:http__server__response                    [SDT event]
+  sdt_node:net__server__connection                   [SDT event]
+  sdt_node:net__stream__end                          [SDT event]
+```
+
+### 
 
 ## コマンドの構成
 主に以下のサブコマンドで構成される
