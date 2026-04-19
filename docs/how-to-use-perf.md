@@ -278,6 +278,63 @@ listAllCoordinates: 1.118s
 
 --repeat, --sync, --pre, --postなどは自動テストに便利
 
+### profiling
+命令へのポインタまたはスタックトレースを固定されたintervelでサンプリングすることでCPU利用状況をProfileできる
+
+- -a
+  - すべてのCPUでサンプリング
+  - コンテナ環境だと権限不足で動かない
+- -g
+  - スタックトレースをサンプリング
+- -F 
+  - サンプリング周波数
+    - 99にしているのは100にした場合の周期的なイベントがサンプリングされないのを防ぐため
+```
+$ perf record -F 99 -g -- node build/sampleWithString.js
+$ ls -lah perf.data
+-rw------- 1 node node 218K Apr 19 17:17 perf.data
+```
+
+生成されたperf.dataはさまざまな方法で分析できる 例としては`perf report`コマンド
+
+```
+$ perf report --stdio
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 657  of event 'task-clock:upppH'
+# Event count (approx.): 6636363570
+#
+# Children      Self  Command     Shared Object        Symbol                                                                         >
+# ........  ........  ..........  ...................  ...............................................................................>
+#
+   100.00%     0.00%  MainThread  node                 [.] _start
+            |
+            ---_start
+               __libc_start_main
+               0xffffbd81225c
+               node::Start(int, char**)
+               node::NodeMainInstance::Run()
+               |          
+                --99.85%--node::LoadEnvironment(node::Environment*, std::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallb>
+                          node::StartExecution(node::Environment*, std::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallba>
+                          node::InternalCallbackScope::~InternalCallbackScope()
+                          node::InternalCallbackScope::Close()
+```
+頂点がCPUで実行されている関数であり、それを呼び出している祖先に遡っている。-Gオプションで判定させることも可能
+
+例えば下の結果の場合は実行時間の99%をextract_bufが占めている
+```
+    94.12%       dd  [kernel.kallsyms]  [k] _raw_spin_unlock_irqrestore
+                 |
+                 --- _raw_spin_unlock_irqrestore
+                    |          
+                    |--90.99%-- extract_buf
+```
+https://www.brendangregg.com/perf.html より
+
 ## コマンドの構成
 主に以下のサブコマンドで構成される
 - list
