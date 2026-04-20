@@ -409,7 +409,26 @@ $ perf buildid-cache --add `which node`
   sdt_node:net__stream__end                          [SDT event]
 ```
 
-### 
+### Dynamic Tracing
+Dynamic tracingを利用するため、以下のKernel configを有効化しておく必要がある
+
+- Dynamic Tracingの有効化
+  - CONFIG_KPROBES
+  - CONFIG_KPROBE_EVENTS
+- frame pointerの有効化
+  - CONFIG_FRAME_POINTER
+- ユーザー空間のトレースの有効化
+  - CONFIG_UPROBES
+  - CONFIG_UPROBE_EVENTS
+
+probeをeventとして追加し、他perfコマンドで使える
+ToDo どんなprobeが使えるか調査
+```
+$ perf probe --add tcp_sendmsg
+
+# 全CPUでprobe:tcp_sendmsgが発生した時のstack traceを取得
+$ perf record -e probe:tcp_sendmsg -a -g -- sleep 5
+```
 
 ## コマンドの構成
 主に以下のサブコマンドで構成される
