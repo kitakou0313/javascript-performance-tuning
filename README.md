@@ -21,7 +21,9 @@ diskutil list
 diskutil mount -mountPoint /Volumes/{マウント先} disk5s1
 
 # multipass自体を再起動
+sudo launchctl kickstart -k system/com.canonical.multipassd
 sudo launchctl start com.canonical.multipassd
+sudo launchctl stop com.canonical.multipassd
 
 # VM起動
 multipass start {VM name}
