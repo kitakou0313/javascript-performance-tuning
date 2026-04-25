@@ -27,4 +27,10 @@ sudo launchctl stop com.canonical.multipassd
 
 # VM起動
 multipass start {VM name}
+
+# VM内でshell実行
+multipass shell witty-topi
+
+# このディレクトリをVM内にマウント
+multipass mount ./ {VM name}
 ```
