@@ -19,6 +19,29 @@ e320d926c5a0 28 Builtin:IndirectPointerBarrierIgnoreFP
 e320d926c5e0 150 Builtin:CallFunction_ReceiverIsNullOrUndefined
 ```
 
+# mapファイルのデータとperf.data内の関数が関連づけられない問題
+
+```
+# PID 51349のスタックトレース
+$ perf script | head -20
+node   51349  1885.063562:   10101010 task-clock:ppp: 
+            e713563269e8 [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+            e7135632ac84 [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+            e7135632bfa8 [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+            e71356336ff8 [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+            e713563342cc [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+            e7135633564c [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+            e71356339654 [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
+
+node   51349  1885.132092:   10101010 task-clock:ppp: 
+            e7135395f180 v8::internal::VariableMap::Lookup(v8::internal::AstRawString const*)+0x40 (/usr/lib/aarch64-linux-gnu/libnode.so.127)
+            e713539614db v8::internal::Scope::ResolvePreparsedVariable(v8::internal::VariableProxy*, v8::internal::Scope*, v8::internal::Scope*)+0x3b (/usr/lib/aarch64-linux-gnu/libnode.so.127)
+# 対応する16進数の行がない
+$ cat /tmp/perf-51349.map | grep  e7135395f180
+$ echo $?
+1
+```
+
 # 資料
 - https://nodejs.org/learn/diagnostics/poor-performance/using-linux-perf
     - 導入方法
