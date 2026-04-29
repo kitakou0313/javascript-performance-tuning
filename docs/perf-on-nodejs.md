@@ -42,6 +42,8 @@ $ echo $?
 1
 ```
 
+原因の仮説1:再コンパイルによるメモリアドレスの変化 -> --no-optオプションで解消可能
+
 # 資料
 - https://nodejs.org/learn/diagnostics/poor-performance/using-linux-perf
     - 導入方法
