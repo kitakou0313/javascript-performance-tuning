@@ -42,7 +42,7 @@ $ echo $?
 1
 ```
 
-原因の仮説1:再コンパイルによるメモリアドレスの変化 -> --no-optオプションで解消可能
+原因の仮説1:再コンパイルによるメモリアドレスの変化 -> --no-optオプションで解消する？
 - V8 Engineでは2段階の変換が行われる
     - ソースコード -> ByteCode -> 機械語
 - 通常はByteCodeをVMが実行時に機械語に都度変換して実行する
@@ -50,6 +50,51 @@ $ echo $?
     - TurboFan
 - この再コンパイルの時にメモリ上のアドレスが変化するため、.mapファイルの内容と統一されなくなったと考えられる
     - ->でもそれは新しくエントリを足せばいいだけでは？
+
+```
+# --no-opt無しだと倍近く実行時間が違う -> 本番アプリケーションとは条件が違いすぎるため参考にならない
+$ sudo perf record -F 99 -g -- node --perf-basic-prof --no-opt  build/sampleWithString.js
+add: 8.232s
+has: 8.360s
+listAllCoordinates: 2.767s
+[ perf record: Woken up 3 times to write data ]
+[ perf record: Captured and wrote 0.629 MB perf.data (1904 samples) ]
+
+#　解消しなかった + 解析に使われているサンプル数が少ない(4)
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 4  of event 'task-clock:ppp'
+# Event count (approx.): 40404040
+#
+# Children      Self  Command  Shared Object          Symbol                                                                          >
+# ........  ........  .......  .....................  ................................................................................>
+#
+    75.00%     0.00%  node     node                   [.] _start
+            |
+            ---_start
+               __libc_start_main_impl (inlined)
+               call_init (inlined)
+               0xf5f01a982f1c
+               node::Start(int, char**)
+               |          
+               |--50.00%--node::NodeMainInstance::Run()
+               |          node::NodeMainInstance::CreateMainEnvironment(node::ExitCode*)
+               |          node::CreateEnvironment(node::IsolateData*, v8::Local<v8::Context>, std::vector<std::__cxx11::basic_string<c>
+               |          node::CreateEnvironment(node::IsolateData*, v8::Local<v8::Context>, std::vector<std::__cxx11::basic_string<c>
+               |          node::Realm::RunBootstrapping()
+               |          node::PrincipalRealm::BootstrapRealm()
+               |          node::Realm::ExecuteBootstrapper(char const*)
+               |          node::builtins::BuiltinLoader::CompileAndCall(v8::Local<v8::Context>, char const*, node::Realm*)
+               |          v8::Object::CallAsFunction(v8::Local<v8::Context>, v8::Local<v8::Value>, int, v8::Local<v8::Value>*)
+               |          v8::internal::Execution::Call(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>, v8::intern>
+               |          0xf5f01c048cd0
+               |          0xf5f01bd058f4
+               |          0xf5f01bd05c0c
+               |          0xf5f01bd07ef0
+```
 
 # 資料
 - https://nodejs.org/learn/diagnostics/poor-performance/using-linux-perf
