@@ -19,10 +19,12 @@ e320d926c5a0 28 Builtin:IndirectPointerBarrierIgnoreFP
 e320d926c5e0 150 Builtin:CallFunction_ReceiverIsNullOrUndefined
 ```
 
-# mapファイルのデータとperf.data内の関数が関連づけられない問題
+# mapファイルのデータとperf.data内の関数が100%関連づけられない問題
 
+一部16進数表記になってしまう
 ```
 # PID 51349のスタックトレース
+# perf scriptコマンドでPIDが見れる
 $ perf script | head -20
 node   51349  1885.063562:   10101010 task-clock:ppp: 
             e713563269e8 [unknown] (/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1)
@@ -40,9 +42,59 @@ node   51349  1885.132092:   10101010 task-clock:ppp:
 $ cat /tmp/perf-51349.map | grep  e7135395f180
 $ echo $?
 1
+
+# 実行したスクリプトについては存在する
+$ cat /tmp/perf-21107.map | grep javascript
+2b0b7f0a3a0 120 Script:~ file:///home/ubuntu/javascript-performance-tuning/build/sampleWithString.js:1:1
+2b0b7f0caf8 72 Script:~ file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:1:1
+2b0b7f0cbf0 f JS:~CoorinateSetWithString file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:1:37
+2b0b7f0ce00 10 JS:~CoorinateSetWithString file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:1:8
+2b0b7f0d3e0 1d JS:~add file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:13:8
+2b0b7f0d480 11 JS:~convertCoordinateToString file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:3:30
+e39f567d20e0 908 JS:^ file:///home/ubuntu/javascript-performance-tuning/build/sampleWithString.js:1:1
+e39f567d3880 90 JS:^convertCoordinateToString file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:3:30
+e39f567d3940 e8 JS:^add file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:13:8
+e39f567d3a60 1f4 JS:*add file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:13:8
+e39f567d3ca0 174 JS:*convertCoordinateToString file:///home/ubuntu/javascript-performance-tuning/build/libs/setWithString.js:3:30
+
+$ 
+|--14.47%--JS:^ file:///home/ubuntu/javascript-performance-tuning/build/sampleWithString.j>
+                                     |          |          
+                                     |           --13.99%--JS:*listAllCoordinates file:///home/ubuntu/javascript-performance-tu>
+                                     |                     |          
+                                     |                     |--8.81%--0xe25dd2d3afe0
+                                     |                     |          |          
+                                     |                     |           --8.65%--0xe25dd2d4d9d4
+                                     |                     |                     v8::internal::Runtime_StringSplit(int, unsigne>
+                                     |                     |                     |          
+                                     |                     |                     |--2.36%--v8::internal::Factory::NewJSArray(v8>
+                                     |                     |                     |          |          
+                                     |                     |                     |          |--0.94%--v8::internal::Factory::Ne>
+                                     |                     |                     |          |          v8::internal::Factory::N>
+                                     |                     |                     |          |          
+                                     |                     |                     |           --0.79%--v8::internal::Factory::Ne>
+                                     |                     |                     |          
+                                     |                     |                     |--1.57%--v8::internal::Factory::NewCopiedSubs>
+                                     |                     |                     |          
+                                     |                     |                     |--1.42%--v8::internal::FindStringIndicesDispa>
+                                     |                     |                     |          |          
+                                     |                     |                     |           --1.26%--v8::internal::FindOneByte>
+                                     |                     |                     |          
+                                     |                     |                      --0.79%--v8::internal::FactoryBase<v8::intern>
+                                     |                     |                                v8::internal::FactoryBase<v8::inter>
+                                     |                     |                                v8::internal::Handle<v8::internal::>
+                                     |                     |          
+                                     |                      --3.93%--0xe25dd2d4d9d4
+                                     |                                |          
+                                     |                                 --3.62%--v8::internal::Runtime_StringParseInt(int, unsig>
+                                     |                                           |          
+                                     |                                            --2.99%--v8::internal::StringToInt(v8::intern>
+                                     |                                                      |          
+                                     |                                                       --2.67%--v8::internal::StringToInt>
 ```
 
-原因の仮説1:再コンパイルによるメモリアドレスの変化 -> --no-optオプションで解消する？
+## 原因調査
+### 仮説1:再コンパイルによるメモリアドレスの変化 -> --no-optオプションで解消する？
 - V8 Engineでは2段階の変換が行われる
     - ソースコード -> ByteCode -> 機械語
 - 通常はByteCodeをVMが実行時に機械語に都度変換して実行する
@@ -95,6 +147,48 @@ listAllCoordinates: 2.767s
                |          0xf5f01bd05c0c
                |          0xf5f01bd07ef0
 ```
+
+### 仮説2:perfコマンドとnodeコマンドを別々に実行しないといけない可能性
+各種サンプルを見ると別々に実行している　これには理由があるのでは？（実行中のwebアプリケーションに対するパフォーマンス調査を意図しているのかもしれないが）
+
+```
+# 以下を別々に実行してみる
+$ sudo perf record -F 99 -p `pgrep -n node` -g -- sleep 15
+$ node --perf-basic-prof build/sampleWithString.js
+
+# 変化なし
+|--18.22%--JS:^ file:///home/ubuntu/javascript-performance-tuning/build/sampleWithString.js:1:1
+               |          |          
+               |           --17.82%--JS:*listAllCoordinates file:///home/ubuntu/javascript-performance-tuning/build/libs/setWit>
+               |                     |          
+               |                     |--9.90%--0xe500fb3aafe0
+               |                     |          0xe500fb3bd9d4
+               |                     |          |          
+               |                     |           --9.50%--v8::internal::Runtime_StringSplit(int, unsigned long*, v8::internal::>
+               |                     |                     |          
+               |                     |                     |--2.77%--v8::internal::Factory::NewJSArray(v8::internal::ElementsKi>
+               |                     |                     |          |          
+               |                     |                     |           --1.78%--v8::internal::Factory::NewJSArrayWithUnverified>
+               |                     |                     |                     v8::internal::Factory::NewJSObjectFromMap(v8::>
+               |                     |                     |                     |          
+               |                     |                     |                      --0.99%--v8::internal::Factory::InitializeJSO>
+               |                     |                     |          
+               |                     |                     |--2.38%--v8::internal::Factory::NewCopiedSubstring(v8::internal::Ha>
+               |                     |                     |          |          
+               |                     |                     |          |--0.79%--void v8::internal::String::WriteToFlat<unsigned>
+               |                     |                     |          |          
+               |                     |                     |           --0.59%--v8::internal::FactoryBase<v8::internal::Factory>
+               |                     |                     |          
+               |                     |                     |--1.58%--v8::internal::FindStringIndicesDispatch(v8::internal::Isol>
+               |                     |                     |          |          
+               |                     |                     |           --1.19%--v8::internal::FindOneByteStringIndices(v8::base>
+               |                     |                     |          
+               |                     |                      --0.59%--v8::internal::FactoryBase<v8::internal::Factory>::MakeOrFi>
+               |                     |                                v8::internal::FactoryBase<v8::internal::Factory>::Interna>
+               |                     |                                v8::internal::Handle<v8::internal::String> v8::internal::>
+            
+```
+
 
 # 資料
 - https://nodejs.org/learn/diagnostics/poor-performance/using-linux-perf
