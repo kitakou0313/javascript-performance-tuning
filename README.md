@@ -10,6 +10,11 @@ sudo apt-get install -y linux-perf
 ## ToDo
 - perfの使い方を復習
 - ByteCode -> Machine code変換の詳細なプロセスを調査
+- flamegraphが生成できない問題の解消
+  - VM上 -> インストールが特殊でflamegraph生成用のスクリプトがない
+  - VM上 -> Docekr Container上 -> perf.dataのデータがLinux Kernelのバージョン違いで処理できない
+- シンボルの詳細について調査
+  - 何？
 
 ## 検証用VMの構築
 
