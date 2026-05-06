@@ -183,6 +183,7 @@ perf_event_attr:
   - Stackの底まで辿れなくなる
 - frame pointer
   - Stack frame内の基点となるメモリ上のアドレスを指す値
+    - 特定のStack frameの識別子のようなもの
   - 関数実行時にStackがつまれた際、呼び出し元関数のFPを保持しておき、呼び出し元を辿れるようにする
   - 解説
     - 前提
